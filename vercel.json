@@ -2,17 +2,5 @@
   "buildCommand": "pnpm --filter @shopguard/types build && pnpm --filter @shopguard/web build",
   "outputDirectory": "apps/web/.next",
   "installCommand": "pnpm install --no-frozen-lockfile",
-  "framework": "nextjs",
-  "rootDirectory": ".",
-  "regions": ["sin1"],
-  "env": {
-    "DATABASE_MAX_CONNECTIONS": "1",
-    "WORKER_MODE": "standalone",
-    "NODE_ENV": "production"
-  },
-  "git": {
-    "deploymentEnabled": {
-      "main": true
-    }
-  }
+  "framework": "nextjs"
 }
