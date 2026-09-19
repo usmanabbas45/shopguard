@@ -1,0 +1,31 @@
+{
+  "name": "@shopguard/worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx --watch src/index.ts",
+    "start": "node --import tsx/esm src/index.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@shopguard/database": "workspace:*",
+    "@shopguard/types": "workspace:*",
+    "bullmq": "^5.18.0",
+    "ioredis": "^5.4.1",
+    "node-cron": "^3.0.3",
+    "drizzle-orm": "^0.38.0",
+    "postgres": "^3.4.5",
+    "nanoid": "^5.0.0",
+    "csv-parse": "^5.6.0",
+    "zod": "^3.24.0",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "@types/node": "^22.0.0",
+    "@types/node-cron": "^3.0.11",
+    "tsx": "^4.0.0"
+  }
+}

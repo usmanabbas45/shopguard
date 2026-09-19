@@ -1,0 +1,21 @@
+{
+  "name": "shopguard",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --parallel run dev",
+    "build": "pnpm --recursive run build",
+    "test": "pnpm --filter @shopguard/web run test",
+    "db:migrate": "pnpm --filter @shopguard/database run migrate",
+    "db:seed": "pnpm --filter @shopguard/database run seed",
+    "demo:seed": "pnpm --filter @shopguard/database run demo:seed",
+    "worker": "pnpm --filter @shopguard/worker run dev",
+    "test:e2e": "pnpm --filter @shopguard/web run test:e2e",
+    "typecheck": "pnpm --filter @shopguard/web run typecheck",
+    "lint": "pnpm --filter @shopguard/web run lint"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "@types/node": "^22.0.0"
+  }
+}

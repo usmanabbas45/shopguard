@@ -1,0 +1,27 @@
+{
+  "name": "@shopguard/database",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "echo 'no build needed for bundler mode'",
+    "seed": "tsx src/seed.ts",
+    "demo:seed": "tsx src/demo-seed.ts",
+    "migrate": "tsx migrate.ts",
+    "migrate:neon": "tsx migrate.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.38.0",
+    "postgres": "^3.4.5"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.30.0",
+    "typescript": "^5.7.2",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0",
+    "tsx": "^4.0.0",
+    "bcryptjs": "^3.0.2",
+    "nanoid": "^5.0.0",
+    "@types/bcryptjs": "^2.4.6"
+  }
+}

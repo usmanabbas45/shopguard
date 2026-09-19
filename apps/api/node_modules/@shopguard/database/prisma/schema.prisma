@@ -1,0 +1,881 @@
+// ShopGuard Database Schema
+// Multi-tenant retail fraud detection SaaS
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== TENANCY ====================
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  timezone    String   @default("Asia/Karachi")
+  currency    String   @default("PKR")
+  locale      String   @default("en")
+  businessType String? // convenience_store, pharmacy, electronics, clothing, restaurant
+  isDemo      Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  memberships  Membership[]
+  invitations  Invitation[]
+  stores       Store[]
+  employees    Employee[]
+  transactions Transaction[]
+  incidents    Incident[]
+  reports      Report[]
+  importJobs   ImportJob[]
+  importMappings ImportMapping[]
+  notifications NotificationPreference[]
+  notificationAttempts NotificationAttempt[]
+  auditLogs    AuditLog[]
+  cashSessions CashSession[]
+  rules        RuleConfig[]
+  models       ModelVersion[]
+  peerGroups   PeerGroup[]
+  subscriptions Subscription[]
+  orgSettings  OrgSettings?
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+model OrgSettings {
+  id             String   @id @default(cuid())
+  organizationId String   @unique
+  riskThresholdHigh   Float @default(0.7)
+  riskThresholdMedium Float @default(0.4)
+  minSampleSizeEmployee Int @default(20)
+  minSampleSizeStore    Int @default(100)
+  followUpHighHours     Int @default(4)
+  followUpMediumHours   Int @default(24)
+  followUpLowHours      Int @default(72)
+  maxFollowUps          Int @default(3)
+  dataRetentionDays     Int @default(730)
+  enableRules           Boolean @default(true)
+  enableML              Boolean @default(true)
+  enableNotifications   Boolean @default(true)
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+// ==================== USERS ====================
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  emailVerified Boolean  @default(false)
+  verifyToken   String?
+  resetToken    String?
+  resetTokenExpiry DateTime?
+  lastLoginAt   DateTime?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  memberships   Membership[]
+  sessions      Session[]
+  incidentReviews IncidentReview[]
+  auditLogs     AuditLog[]
+
+  @@index([email])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+model Membership {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String
+  role           Role     @default(VIEWER)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+}
+
+model Invitation {
+  id             String   @id @default(cuid())
+  organizationId String
+  email          String
+  role           Role     @default(VIEWER)
+  token          String   @unique
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([organizationId, email])
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MANAGER
+  INVESTIGATOR
+  VIEWER
+}
+
+// ==================== STORES ====================
+
+model Store {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  code           String?
+  address        String?
+  timezone       String?
+  isActive       Boolean  @default(true)
+  openingHour    Int      @default(8)
+  closingHour    Int      @default(22)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  registers      Register[]
+  transactions   Transaction[]
+  incidents      Incident[]
+  cashSessions   CashSession[]
+  storeBaselines StoreBaseline[]
+  cameras        Camera[]
+  reports        Report[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([isActive])
+}
+
+model Register {
+  id             String   @id @default(cuid())
+  organizationId String
+  storeId        String
+  name           String
+  code           String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  store          Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  transactions   Transaction[]
+  incidents      Incident[]
+  cashSessions   CashSession[]
+  registerBaselines RegisterBaseline[]
+  cameraMapping  CameraMapping[]
+
+  @@unique([storeId, code])
+  @@index([organizationId])
+  @@index([storeId])
+}
+
+// ==================== EMPLOYEES ====================
+
+model Employee {
+  id             String   @id @default(cuid())
+  organizationId String
+  externalId     String?
+  name           String
+  code           String?
+  email          String?
+  phone          String?
+  role           String?
+  isActive       Boolean  @default(true)
+  hiredAt        DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  transactions   Transaction[]
+  incidents      Incident[]
+  cashSessions   CashSession[]
+  baselines      EmployeeBaseline[]
+
+  @@unique([organizationId, externalId])
+  @@index([organizationId])
+  @@index([isActive])
+}
+
+// ==================== TRANSACTIONS ====================
+
+model Transaction {
+  id                    String   @id @default(cuid())
+  organizationId        String
+  storeId               String
+  registerId            String?
+  employeeId            String?
+  externalTransactionId String?
+  timestamp             DateTime
+  currency              String   @default("PKR")
+  grossAmount           Decimal  @db.Decimal(18, 2)
+  discountAmount        Decimal  @default(0) @db.Decimal(18, 2)
+  refundAmount          Decimal  @default(0) @db.Decimal(18, 2)
+  netAmount             Decimal  @db.Decimal(18, 2)
+  paymentMethod         String?  // cash, card, mobile, mixed
+  transactionStatus     TxStatus @default(COMPLETED)
+  itemCount             Int?
+  durationSeconds       Int?
+  isVoid                Boolean  @default(false)
+  isRefund              Boolean  @default(false)
+  isNoSale              Boolean  @default(false)
+  hasPriceOverride      Boolean  @default(false)
+  discountPercent       Decimal? @db.Decimal(5, 2)
+  notes                 String?
+  metadata              Json?
+  source                String   @default("csv") // csv, api, webhook, shopify, square
+  sourceRecordId        String?
+  importJobId           String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  store          Store          @relation(fields: [storeId], references: [id])
+  register       Register?      @relation(fields: [registerId], references: [id])
+  employee       Employee?      @relation(fields: [employeeId], references: [id])
+  importJob      ImportJob?     @relation(fields: [importJobId], references: [id])
+  incidentTxns   IncidentTransaction[]
+  featureSnapshot FeatureSnapshot?
+
+  @@unique([organizationId, externalTransactionId, source])
+  @@index([organizationId, timestamp])
+  @@index([organizationId, employeeId])
+  @@index([organizationId, storeId])
+  @@index([organizationId, registerId])
+  @@index([isVoid])
+  @@index([isRefund])
+  @@index([transactionStatus])
+}
+
+enum TxStatus {
+  COMPLETED
+  VOIDED
+  REFUNDED
+  PARTIAL_REFUND
+  PENDING
+  CANCELLED
+}
+
+// ==================== CASH ====================
+
+model CashSession {
+  id             String   @id @default(cuid())
+  organizationId String
+  storeId        String
+  registerId     String?
+  employeeId     String?
+  date           DateTime @db.Date
+  shiftType      String?  // morning, afternoon, evening, night
+  openingCash    Decimal  @db.Decimal(18, 2)
+  cashSales      Decimal  @default(0) @db.Decimal(18, 2)
+  cashRefunds    Decimal  @default(0) @db.Decimal(18, 2)
+  cashAdjustments Decimal @default(0) @db.Decimal(18, 2)
+  expectedCash   Decimal  @db.Decimal(18, 2)
+  countedCash    Decimal? @db.Decimal(18, 2)
+  variance       Decimal? @db.Decimal(18, 2)
+  isReconciled   Boolean  @default(false)
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  store          Store        @relation(fields: [storeId], references: [id])
+  register       Register?    @relation(fields: [registerId], references: [id])
+  employee       Employee?    @relation(fields: [employeeId], references: [id])
+
+  @@index([organizationId, date])
+  @@index([organizationId, storeId, date])
+}
+
+// ==================== INCIDENTS ====================
+
+model Incident {
+  id             String   @id @default(cuid())
+  organizationId String
+  storeId        String?
+  registerId     String?
+  employeeId     String?
+  severity       Severity
+  riskLevel      RiskLevel
+  status         IncidentStatus @default(OPEN)
+  type           String   // void_anomaly, cash_variance, refund_anomaly, etc.
+  title          String
+  summary        String
+  whyFlagged     String[]
+  ruleIds        String[]
+  modelVersion   String?
+  featureVersion String?
+  mlScore        Float?   // internal only, never shown as %
+  nextFollowUpAt DateTime?
+  followUpCount  Int      @default(0)
+  escalationLevel Int     @default(0)
+  isDemo         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  store          Store?       @relation(fields: [storeId], references: [id])
+  register       Register?    @relation(fields: [registerId], references: [id])
+  employee       Employee?    @relation(fields: [employeeId], references: [id])
+  evidence       IncidentEvidence[]
+  reviews        IncidentReview[]
+  transactions   IncidentTransaction[]
+  notifAttempts  NotificationAttempt[]
+  relatedIncidents IncidentRelation[] @relation("primaryIncident")
+  relatedTo      IncidentRelation[]  @relation("relatedIncident")
+
+  @@index([organizationId, status])
+  @@index([organizationId, severity])
+  @@index([organizationId, employeeId])
+  @@index([organizationId, storeId])
+  @@index([organizationId, createdAt])
+  @@index([nextFollowUpAt])
+}
+
+model IncidentEvidence {
+  id          String   @id @default(cuid())
+  incidentId  String
+  ruleId      String?
+  type        String   // rule, baseline, ml, sequence
+  description String
+  severity    Severity
+  score       Float    @default(0)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  incident    Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId])
+}
+
+model IncidentTransaction {
+  incidentId    String
+  transactionId String
+
+  incident    Incident    @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+
+  @@id([incidentId, transactionId])
+}
+
+model IncidentRelation {
+  primaryIncidentId String
+  relatedIncidentId String
+  relationType      String // correlated, duplicate, sequence
+
+  primary  Incident @relation("primaryIncident", fields: [primaryIncidentId], references: [id])
+  related  Incident @relation("relatedIncident", fields: [relatedIncidentId], references: [id])
+
+  @@id([primaryIncidentId, relatedIncidentId])
+}
+
+model IncidentReview {
+  id          String   @id @default(cuid())
+  incidentId  String
+  userId      String
+  label       ReviewLabel
+  notes       String?
+  modelVersion String?
+  featureVersion String?
+  createdAt   DateTime @default(now())
+
+  incident    Incident @relation(fields: [incidentId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([incidentId])
+  @@index([label])
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum IncidentStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+enum ReviewLabel {
+  VALID_INCIDENT
+  FALSE_POSITIVE
+  NEEDS_INVESTIGATION
+  NOT_ENOUGH_EVIDENCE
+}
+
+// ==================== BASELINES ====================
+
+model EmployeeBaseline {
+  id              String   @id @default(cuid())
+  organizationId  String
+  employeeId      String
+  period          String   // rolling_30d, rolling_7d, all_time
+  confidence      BaselineConfidence
+  txCount         Int      @default(0)
+  avgAmount       Decimal? @db.Decimal(18, 2)
+  medianAmount    Decimal? @db.Decimal(18, 2)
+  stdAmount       Decimal? @db.Decimal(18, 2)
+  txPerHour       Float?
+  voidRate        Float?
+  refundRate      Float?
+  discountRate    Float?
+  priceOverrideRate Float?
+  avgDiscountPct  Float?
+  cashVarianceRate Float?
+  computedAt      DateTime @default(now())
+
+  employee        Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, period])
+  @@index([organizationId])
+}
+
+model StoreBaseline {
+  id              String   @id @default(cuid())
+  organizationId  String
+  storeId         String
+  period          String
+  confidence      BaselineConfidence
+  txCount         Int      @default(0)
+  avgAmount       Decimal? @db.Decimal(18, 2)
+  medianAmount    Decimal? @db.Decimal(18, 2)
+  stdAmount       Decimal? @db.Decimal(18, 2)
+  voidRate        Float?
+  refundRate      Float?
+  discountRate    Float?
+  hourlyVolume    Json?    // {hour: avg_count}
+  dowVolume       Json?    // {0-6: avg_count}
+  computedAt      DateTime @default(now())
+
+  store           Store @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, period])
+  @@index([organizationId])
+}
+
+model RegisterBaseline {
+  id              String   @id @default(cuid())
+  organizationId  String
+  registerId      String
+  period          String
+  confidence      BaselineConfidence
+  txCount         Int      @default(0)
+  noSaleRate      Float?
+  voidRate        Float?
+  refundRate      Float?
+  cashVarianceRate Float?
+  computedAt      DateTime @default(now())
+
+  register        Register @relation(fields: [registerId], references: [id])
+
+  @@unique([registerId, period])
+  @@index([organizationId])
+}
+
+enum BaselineConfidence {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+// ==================== FEATURE SNAPSHOTS ====================
+
+model FeatureSnapshot {
+  id             String   @id @default(cuid())
+  transactionId  String   @unique
+  organizationId String
+  features       Json
+  featureVersion String   @default("1.0.0")
+  createdAt      DateTime @default(now())
+
+  transaction    Transaction @relation(fields: [transactionId], references: [id])
+
+  @@index([organizationId])
+}
+
+// ==================== ML MODELS ====================
+
+model ModelVersion {
+  id                  String   @id @default(cuid())
+  organizationId      String?  // null = global model
+  name                String
+  version             String
+  featureVersion      String
+  status              ModelStatus @default(CANDIDATE)
+  isProduction        Boolean  @default(false)
+  trainingDatasetId   String?
+  trainingSampleCount Int?
+  metrics             Json?
+  hyperparameters     Json?
+  artifactPath        String?
+  deployedAt          DateTime?
+  retiredAt           DateTime?
+  createdAt           DateTime @default(now())
+
+  organization        Organization? @relation(fields: [organizationId], references: [id])
+  trainingDataset     TrainingDataset? @relation(fields: [trainingDatasetId], references: [id])
+
+  @@index([organizationId, status])
+  @@index([isProduction])
+}
+
+model TrainingDataset {
+  id             String   @id @default(cuid())
+  organizationId String?
+  name           String
+  description    String?
+  labelCount     Int
+  positiveLabelCount Int
+  negativeLabelCount Int
+  featureVersion String
+  isDemo         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  models         ModelVersion[]
+  trainingRuns   TrainingRun[]
+}
+
+model TrainingRun {
+  id              String   @id @default(cuid())
+  datasetId       String?
+  status          TrainingRunStatus @default(PENDING)
+  triggeredBy     String   // scheduled, manual, drift, feedback_threshold
+  startedAt       DateTime?
+  completedAt     DateTime?
+  error           String?
+  metrics         Json?
+  candidateModelId String?
+  logs            String?
+  createdAt       DateTime @default(now())
+
+  dataset         TrainingDataset? @relation(fields: [datasetId], references: [id])
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum ModelStatus {
+  CANDIDATE
+  PRODUCTION
+  RETIRED
+  FAILED
+}
+
+enum TrainingRunStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+// ==================== RULES ====================
+
+model RuleConfig {
+  id             String   @id @default(cuid())
+  organizationId String
+  ruleId         String
+  enabled        Boolean  @default(true)
+  severity       Severity @default(MEDIUM)
+  thresholds     Json?
+  minSampleSize  Int      @default(10)
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, ruleId])
+}
+
+// ==================== IMPORT ====================
+
+model ImportJob {
+  id             String   @id @default(cuid())
+  organizationId String
+  storeId        String?
+  filename       String
+  originalName   String
+  fileSize       Int
+  status         ImportStatus @default(PENDING)
+  mappingId      String?
+  rowCount       Int?
+  importedCount  Int      @default(0)
+  skippedCount   Int      @default(0)
+  errorCount     Int      @default(0)
+  qualityReport  Json?
+  error          String?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime @default(now())
+
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  mapping        ImportMapping? @relation(fields: [mappingId], references: [id])
+  transactions   Transaction[]
+  dataQualityIssues DataQualityIssue[]
+
+  @@index([organizationId, status])
+}
+
+model ImportMapping {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  posType        String?  // csv_generic, shopify, square, etc.
+  columnMappings Json     // {normalized_field: csv_column}
+  transformations Json?   // field-specific transforms
+  isDefault      Boolean  @default(false)
+  useCount       Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  importJobs     ImportJob[]
+
+  @@index([organizationId])
+}
+
+model DataQualityIssue {
+  id          String   @id @default(cuid())
+  importJobId String
+  rowNumber   Int?
+  field       String?
+  issueType   String   // missing_field, duplicate, invalid_timestamp, etc.
+  description String
+  rawValue    String?
+  createdAt   DateTime @default(now())
+
+  importJob   ImportJob @relation(fields: [importJobId], references: [id])
+
+  @@index([importJobId])
+}
+
+enum ImportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+// ==================== NOTIFICATIONS ====================
+
+model NotificationPreference {
+  id             String   @id @default(cuid())
+  organizationId String
+  channel        NotificationChannel
+  enabled        Boolean  @default(true)
+  highPriority   Boolean  @default(true)
+  mediumPriority Boolean  @default(true)
+  lowPriority    Boolean  @default(false)
+  email          String?
+  phone          String?  // for WhatsApp
+  batchDelayMinutes Int   @default(60)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+}
+
+model NotificationAttempt {
+  id             String   @id @default(cuid())
+  organizationId String
+  incidentId     String?
+  channel        NotificationChannel
+  type           NotificationType
+  recipient      String
+  status         NotificationStatus @default(PENDING)
+  providerMessageId String?
+  failureReason  String?
+  retryCount     Int      @default(0)
+  sentAt         DateTime?
+  createdAt      DateTime @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  incident       Incident?    @relation(fields: [incidentId], references: [id])
+
+  @@index([organizationId, status])
+  @@index([incidentId])
+}
+
+enum NotificationChannel {
+  EMAIL
+  WHATSAPP
+  SMS
+  IN_APP
+}
+
+enum NotificationType {
+  INCIDENT_CREATED
+  INCIDENT_FOLLOWUP
+  INCIDENT_ESCALATION
+  DAILY_REPORT
+  SYSTEM_ALERT
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+  SKIPPED
+}
+
+// ==================== REPORTS ====================
+
+model Report {
+  id             String   @id @default(cuid())
+  organizationId String
+  storeId        String?
+  type           ReportType
+  title          String
+  date           DateTime @db.Date
+  summary        Json
+  isGenerated    Boolean  @default(false)
+  isDemo         Boolean  @default(false)
+  generatedAt    DateTime?
+  createdAt      DateTime @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  store          Store?       @relation(fields: [storeId], references: [id])
+
+  @@index([organizationId, type, date])
+}
+
+enum ReportType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  INCIDENT
+}
+
+// ==================== AUDIT ====================
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  organizationId String?
+  userId         String?
+  action         String
+  entity         String?
+  entityId       String?
+  metadata       Json?
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime @default(now())
+
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  user           User?         @relation(fields: [userId], references: [id])
+
+  @@index([organizationId, createdAt])
+  @@index([userId])
+  @@index([action])
+}
+
+// ==================== PEER GROUPS ====================
+
+model PeerGroup {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  businessType   String?
+  criteria       Json
+  computedAt     DateTime @default(now())
+  metrics        Json?
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+}
+
+// ==================== CCTV (Future) ====================
+
+model Camera {
+  id      String @id @default(cuid())
+  storeId String
+  name    String
+  location String?
+  streamUrl String?
+  isActive Boolean @default(true)
+
+  store   Store @relation(fields: [storeId], references: [id])
+  mappings CameraMapping[]
+}
+
+model CameraMapping {
+  id         String @id @default(cuid())
+  cameraId   String
+  registerId String
+
+  camera   Camera   @relation(fields: [cameraId], references: [id])
+  register Register @relation(fields: [registerId], references: [id])
+
+  @@unique([cameraId, registerId])
+}
+
+// ==================== BILLING ====================
+
+model Subscription {
+  id             String   @id @default(cuid())
+  organizationId String   @unique
+  plan           SubscriptionPlan @default(TRIAL)
+  status         SubscriptionStatus @default(ACTIVE)
+  trialEndsAt    DateTime?
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  providerSubscriptionId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+}
+
+enum SubscriptionPlan {
+  TRIAL
+  STARTER
+  GROWTH
+  MULTI_LOCATION
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}

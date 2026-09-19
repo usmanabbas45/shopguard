@@ -1,0 +1,21 @@
+# Render Blueprint — Deploy ShopGuard on Render free tier
+# docs: https://render.com/docs/blueprint-spec
+
+services:
+  # Python ML service
+  - type: web
+    name: shopguard-ml
+    runtime: python
+    plan: free
+    rootDir: apps/ml
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn src.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ML_MODEL_DIR
+        value: /tmp/shopguard_models
+      - key: PYTHON_VERSION
+        value: 3.12.0
+    healthCheckPath: /health
+    # Note: Free tier sleeps after 15 min of inactivity.
+    # First request after sleep takes ~30s to respond.
+    # App works without ML service (rules+baselines continue).
