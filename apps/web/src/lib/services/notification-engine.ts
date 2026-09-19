@@ -77,7 +77,6 @@ async function createRealEmailProvider(): Promise<NotificationProvider | null> {
   if (!process.env.SMTP_HOST) return null
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    // @ts-expect-error nodemailer is optional runtime dependency
     const nodemailer = await import('nodemailer')
     const transporter = nodemailer.default.createTransport({
       host: process.env.SMTP_HOST,

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { inspectCSV } from '@/lib/csv-import'
 
-export const config = { api: { bodyParser: false } }
 
 export async function POST(req: NextRequest) {
   try {
