@@ -38,9 +38,9 @@ async function seed() {
     id: orgId,
     name: 'Demo Electronics Mart',
     slug: 'demo-electronics-mart',
-    timezone: 'Asia/Karachi',
+    timezone: 'Asia/Karachi',    // Demo org is in Pakistan — one of many supported regions
     currency: 'PKR',
-    locale: 'en',
+    locale: 'en-PK',
     businessType: 'electronics',
     isDemo: true,
     isActive: true,
@@ -67,9 +67,10 @@ async function seed() {
 
   // 3. Stores
   const stores = [
-    { id: 'demo-store-1', name: 'Main Branch', code: 'MB', address: 'Block 5, Clifton, Karachi' },
-    { id: 'demo-store-2', name: 'North Outlet', code: 'NO', address: 'Gulshan-e-Iqbal, Karachi' },
-    { id: 'demo-store-3', name: 'Mall Counter', code: 'MC', address: 'Dolmen Mall, Karachi' },
+    // DEMO: This demo uses a Pakistan retailer. ShopGuard supports retailers globally.
+    { id: 'demo-store-1', name: 'Main Branch', code: 'MB', address: 'Block 5, Clifton, Karachi', timezone: 'Asia/Karachi' },
+    { id: 'demo-store-2', name: 'North Outlet', code: 'NO', address: 'Gulshan-e-Iqbal, Karachi', timezone: 'Asia/Karachi' },
+    { id: 'demo-store-3', name: 'Mall Counter', code: 'MC', address: 'Dolmen Mall, Karachi', timezone: 'Asia/Karachi' },
   ]
 
   for (const store of stores) {
@@ -188,6 +189,7 @@ async function seed() {
           hasPriceOverride: rand() < 0.03,
           discountPercent: discountPct > 0 ? discountPct.toFixed(2) : null,
           source: 'demo',
+          dataSource: 'DEMO' as const,
           isDemo: true,
         })
 
@@ -215,6 +217,7 @@ async function seed() {
             hasPriceOverride: false,
             discountPercent: null,
             source: 'demo',
+            dataSource: 'DEMO' as const,
             isDemo: true,
           })
           txNum++

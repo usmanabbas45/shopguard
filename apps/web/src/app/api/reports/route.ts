@@ -16,7 +16,7 @@ export async function GET() {
           summary: {
             sales: 487250, txCount: 342, voidCount: 8, refundCount: 5,
             incidents: { total: 7, high: 3, open: 5 },
-            currency: 'PKR', generatedAt: new Date().toISOString(),
+            currency: 'USD', generatedAt: new Date().toISOString(),
           },
           isGenerated: true,
         },

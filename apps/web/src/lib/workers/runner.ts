@@ -18,6 +18,37 @@ import { analysisJobs, jobLogs } from '@shopguard/database'
 import { eq } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 
+// ==================== SHOPIFY SYNC WORKER ====================
+
+async function processShopifySyncJob(job: Job): Promise<{ complete: boolean; accepted: number; cursor: string | null }> {
+  const { integrationId, organizationId, idempotencyKey } = job.data as {
+    integrationId: string; organizationId: string; idempotencyKey: string
+  }
+
+  logJob('info', 'shopify-sync', job.id!, `Running sync batch for integration ${integrationId}`, { organizationId })
+
+  const { runShopifySyncBatch } = await import('../shopify/sync')
+  const result = await runShopifySyncBatch(integrationId)
+
+  if (!result.complete && !result.error) {
+    // More batches remain — re-enqueue next batch
+    // Dynamic import to avoid circular dependency
+    const queueModule = await import('../queue/index')
+    await queueModule.enqueueShopifySync({
+      integrationId,
+      organizationId,
+      idempotencyKey: `${idempotencyKey}:${Date.now()}`,  // New key so next batch isn't deduplicated
+    })
+    logJob('info', 'shopify-sync', job.id!, `Batch done, more remain — re-enqueued`, {
+      accepted: result.accepted, cursor: result.cursor,
+    })
+  } else {
+    logJob('info', 'shopify-sync', job.id!, `Sync ${result.complete ? 'completed' : 'failed'}`, result)
+  }
+
+  return { complete: result.complete, accepted: result.accepted, cursor: result.cursor }
+}
+
 // ==================== WORKER REGISTRY ====================
 
 const activeWorkers: Worker[] = []
@@ -197,6 +228,7 @@ const WORKER_MAP: Record<string, (job: Job) => Promise<unknown>> = {
   [QUEUE_NAMES.ML]: processMLJob,
   [QUEUE_NAMES.QUALITY]: processQualityJob,
   [QUEUE_NAMES.HEALTH]: processHealthJob,
+  [QUEUE_NAMES.SHOPIFY_SYNC]: processShopifySyncJob,
 }
 
 export async function startWorkers(): Promise<void> {

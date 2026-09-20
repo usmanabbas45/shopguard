@@ -10,42 +10,55 @@ export function generateId(): string {
   return nanoid(21)
 }
 
-export function formatCurrency(amount: number, currency = 'PKR', locale = 'en-PK'): string {
-  return new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
+/**
+ * Format a monetary amount.
+ * @deprecated Use formatCurrency from '@/lib/money' with explicit locale/currency from org settings.
+ * This wrapper exists for backward compatibility only.
+ */
+export function formatCurrency(amount: number, currency = 'USD', locale = 'en-US'): string {
+  try {
+    const { formatCurrency: fmt } = require('./money')
+    return fmt(amount, currency, locale)
+  } catch {
+    return `${currency} ${amount.toFixed(2)}`
+  }
+}
+
+/**
+ * Format a date.
+ * @deprecated Use formatDate from '@/lib/money' with org locale/timezone.
+ */
+export function formatDate(date: Date | string): string {
+  try {
+    const { formatDate: fmt } = require('./money')
+    return fmt(date, 'en-US')
+  } catch {
+    return new Date(date).toLocaleDateString()
+  }
+}
+
+/**
+ * Format a date+time.
+ * @deprecated Use formatDateTime from '@/lib/money' with org locale/timezone.
+ */
+export function formatDateTime(date: Date | string): string {
+  try {
+    const { formatDateTime: fmt } = require('./money')
+    return fmt(date, 'en-US')
+  } catch {
+    return new Date(date).toLocaleString()
+  }
 }
 
 export function formatPercent(value: number): string {
   return `${(value * 100).toFixed(1)}%`
 }
 
-export function formatDate(date: Date | string): string {
-  return new Date(date).toLocaleDateString('en-PK', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
-}
-
-export function formatDateTime(date: Date | string): string {
-  return new Date(date).toLocaleString('en-PK', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
 export function timeAgo(date: Date | string): string {
   const now = new Date()
   const d = new Date(date)
   const seconds = Math.floor((now.getTime() - d.getTime()) / 1000)
-  
+
   if (seconds < 60) return `${seconds}s ago`
   const minutes = Math.floor(seconds / 60)
   if (minutes < 60) return `${minutes}m ago`

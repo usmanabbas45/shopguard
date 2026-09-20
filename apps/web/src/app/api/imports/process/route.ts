@@ -148,7 +148,7 @@ export async function POST(req: NextRequest) {
         const txId = nanoid()
         await db.insert(transactions).values({
           id: txId, organizationId: orgId, storeId: resolvedStoreId, registerId, employeeId,
-          externalTransactionId: externalId, timestamp, currency: 'PKR',
+          externalTransactionId: externalId, timestamp, currency: get(row, 'currency') || 'USD',
           grossAmount: grossAmount.toFixed(2), discountAmount: discountAmount.toFixed(2),
           refundAmount: refundAmount.toFixed(2), netAmount: netAmount.toFixed(2),
           paymentMethod, transactionStatus: isVoid ? 'VOIDED' : isRefund ? 'REFUNDED' : 'COMPLETED',

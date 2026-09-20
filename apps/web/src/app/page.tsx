@@ -156,7 +156,7 @@ export default function LandingPage() {
               { q: 'Does ShopGuard require new hardware?', a: 'No. ShopGuard works with CSV exports from your existing POS system. You can also connect via API when ready.' },
               { q: 'What POS systems does ShopGuard support?', a: 'Any POS that can export transactions to CSV. ShopGuard automatically detects column formats. Direct integrations are being added.' },
               { q: 'How does ShopGuard avoid false alarms?', a: 'ShopGuard builds individual baselines for each employee, store, and register. It considers time of day, day of week, and transaction volume before flagging unusual activity.' },
-              { q: 'What currencies are supported?', a: 'Pakistani Rupee (PKR) is the primary currency. USD, EUR, GBP and other currencies are also supported.' },
+              { q: 'What currencies are supported?', a: 'ShopGuard supports all major currencies including USD, EUR, GBP, AED, SAR, PKR, INR, JPY, and 40+ others. Your organization currency is configured in Settings.' },
               { q: "Is employee data kept confidential?", a: 'Transaction data is stored securely and is only accessible to authorized users in your organization. ShopGuard does not share data between tenants.' },
             ].map((faq) => (
               <div key={faq.q} className="border-b border-slate-100 pb-6">
@@ -187,7 +187,7 @@ export default function LandingPage() {
             <ShieldCheck className="w-5 h-5 text-brand-400" />
             <span className="text-white font-medium">ShopGuard</span>
           </div>
-          <p className="text-sm">Retail transaction intelligence for Pakistan and beyond.</p>
+          <p className="text-sm">Retail transaction intelligence for businesses worldwide.</p>
         </div>
       </footer>
     </div>

@@ -1,3 +1,4 @@
+import { normalizePaymentMethod } from './payment-methods'
 // ShopGuard CSV Import Engine
 
 import { parse } from 'csv-parse/sync'
@@ -199,8 +200,9 @@ export function parseBoolean(value: string): boolean {
 export function parsePaymentMethod(value: string): string {
   if (!value) return 'unknown'
   const v = value.toLowerCase().trim()
-  if (['cash', 'cash payment', 'currency'].includes(v)) return 'cash'
-  if (['card', 'credit', 'debit', 'credit card', 'debit card', 'visa', 'mastercard'].some(k => v.includes(k))) return 'card'
-  if (['mobile', 'jazzcash', 'easypaisa', 'mobile money', 'wallet'].some(k => v.includes(k))) return 'mobile'
+  // Delegate to the global normalizer which covers all regions
+  const normalized = normalizePaymentMethod(value)
+  // Return lowercase for backward compat with existing DB records
+  return normalized.toLowerCase()
   return v || 'other'
 }

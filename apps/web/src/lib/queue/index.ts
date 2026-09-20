@@ -69,6 +69,7 @@ export const QUEUE_NAMES = {
   ML: 'sg:ml',
   HEALTH: 'sg:health',
   QUALITY: 'sg:quality',
+  SHOPIFY_SYNC: 'sg:shopify-sync',  // Shopify historical/incremental sync batches
 } as const
 
 // ==================== QUEUE FACTORY ====================
@@ -273,4 +274,46 @@ export async function runJobInline(queueName: string, data: unknown): Promise<un
   // Dynamic import to avoid circular dependencies
   const { runJobInline: _run } = await import('../workers/runner')
   return _run(queueName, data)
+}
+
+// ==================== SHOPIFY SYNC QUEUE ====================
+
+export interface ShopifySyncJobData {
+  integrationId: string
+  organizationId: string
+  /** Idempotency key — prevents BullMQ duplicate jobs for same integration */
+  idempotencyKey: string
+}
+
+/**
+ * Enqueue a Shopify initial (or resume) sync job.
+ *
+ * Consumer paths on Vercel (no persistent worker):
+ *   1. Vercel Cron (/api/cron/process-jobs every 5 min) reads DB syncStatus='QUEUED'
+ *   2. Manual "Sync now" also runs one batch inline immediately
+ *
+ * Consumer paths on standalone worker (Docker/Render):
+ *   1. BullMQ Worker listening on 'sg:shopify-sync'
+ *
+ * Idempotency: jobId = idempotencyKey → BullMQ deduplicates if same key queued twice.
+ * DB syncStatus='QUEUED' is the durable fallback signal (survives Redis restart).
+ */
+export async function enqueueShopifySync(data: ShopifySyncJobData): Promise<string | null> {
+  const queue = getQueue(QUEUE_NAMES.SHOPIFY_SYNC)
+  if (queue) {
+    try {
+      const job = await queue.add('shopify-sync', data, {
+        jobId: data.idempotencyKey,
+        attempts: 5,
+        backoff: { type: 'exponential', delay: 10000 },
+      })
+      return job.id ?? null
+    } catch (err: unknown) {
+      const msg = String(err)
+      if (msg.includes('already exists') || msg.includes('duplicate')) return 'deduplicated'
+      console.error('[queue] Failed to enqueue Shopify sync:', msg.slice(0, 100))
+    }
+  }
+  // No Redis — cron will pick up via DB syncStatus='QUEUED'
+  return null
 }

@@ -1,0 +1,10 @@
+{
+  "installCommand": "pnpm install --no-frozen-lockfile",
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/process-jobs",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

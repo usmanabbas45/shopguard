@@ -181,10 +181,10 @@ export async function normalizeWebhookEvent(
     case 'csv':
       adapter = new CSVAdapter(config)
       break
-    // Future adapters:
-    // case 'shopify': adapter = new ShopifyAdapter(config); break
-    // case 'square': adapter = new SquareAdapter(config); break
-    // case 'lightspeed': adapter = new LightspeedAdapter(config); break
+    // Shopify uses its own dedicated webhook endpoint (/api/integrations/shopify/webhook)
+    // with HMAC verification, not the generic adapter pattern.
+    // case 'shopify': handled by /api/integrations/shopify/webhook
+    // Square, Lightspeed, Toast, Clover: not yet implemented
     default:
       console.warn(`[webhook] Unknown POS provider: ${provider}`)
       return null

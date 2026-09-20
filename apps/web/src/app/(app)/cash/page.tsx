@@ -12,7 +12,8 @@ interface CashSession {
   isReconciled: boolean
 }
 
-const CURRENCY = 'PKR'
+// Currency comes from org settings via API — do not hardcode
+const CURRENCY = 'USD' // fallback only
 
 function VarianceBadge({ variance }: { variance: number }) {
   const isNeg = variance < 0

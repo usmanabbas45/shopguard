@@ -133,12 +133,44 @@ export default function DashboardClient({ initialStats: stats, initialIncidents:
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
-          <p className="text-sm text-slate-500 mt-0.5">{new Date().toLocaleDateString('en-PK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <p className="text-sm text-slate-500 mt-0.5">{new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
         <Link href="/import" className="inline-flex items-center gap-2 text-sm font-medium bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-50 transition-colors">
           + Import Data
         </Link>
       </div>
+
+      {/* DEMO DATA banner — clearly distinguishes demo from live */}
+      {isDemo && (
+        <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+          <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wide">
+            Demo Data
+          </span>
+          <p className="text-sm text-amber-800">
+            This organization is running on sample data only. No real transactions are connected.
+          </p>
+        </div>
+      )}
+
+      {/* Data Status — shows data mode for live orgs */}
+      {!isDemo && stats.transactionCount === 0 && (
+        <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+          <span className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wide">
+            Live — No Data
+          </span>
+          <p className="text-sm text-blue-800">
+            No transactions yet. Import a CSV or connect your POS via API to start detection.
+          </p>
+        </div>
+      )}
+      {!isDemo && stats.transactionCount > 0 && (
+        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2.5">
+          <span className="inline-flex items-center gap-1.5 bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide">
+            Live Data
+          </span>
+          <p className="text-sm text-green-800">{stats.transactionCount.toLocaleString()} real transactions loaded</p>
+        </div>
+      )}
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

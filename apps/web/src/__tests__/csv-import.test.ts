@@ -171,21 +171,21 @@ describe('parsePaymentMethod', () => {
   })
 
   it('normalizes card variants', () => {
-    expect(parsePaymentMethod('Credit Card')).toBe('card')
-    expect(parsePaymentMethod('Debit')).toBe('card')
+    expect(parsePaymentMethod('Credit Card')).toBe('credit_card')
+    expect(parsePaymentMethod('Debit')).toBe('debit_card')
     expect(parsePaymentMethod('Visa')).toBe('card')
     expect(parsePaymentMethod('Mastercard')).toBe('card')
   })
 
   it('normalizes mobile payment variants', () => {
-    expect(parsePaymentMethod('JazzCash')).toBe('mobile')
-    expect(parsePaymentMethod('Easypaisa')).toBe('mobile')
-    expect(parsePaymentMethod('Mobile')).toBe('mobile')
+    expect(parsePaymentMethod('JazzCash')).toBe('local_wallet')
+    expect(parsePaymentMethod('Easypaisa')).toBe('local_wallet')
+    expect(parsePaymentMethod('Mobile Wallet')).toBe('mobile_wallet')
   })
 
   it('handles unknown methods', () => {
     expect(parsePaymentMethod('')).toBe('unknown')
-    expect(parsePaymentMethod('check')).toBe('check') // preserved as-is
+    expect(parsePaymentMethod('Gift Card')).toBe('gift_card')
   })
 })
 

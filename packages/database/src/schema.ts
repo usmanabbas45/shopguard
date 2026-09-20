@@ -3,6 +3,7 @@ import { relations } from 'drizzle-orm'
 
 // Enums
 export const roleEnum = pgEnum('role', ['OWNER', 'ADMIN', 'MANAGER', 'INVESTIGATOR', 'VIEWER'])
+export const dataSourceEnum = pgEnum('data_source', ['DEMO', 'CSV', 'API', 'WEBHOOK', 'TEST', 'SHOPIFY'])
 export const severityEnum = pgEnum('severity', ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'])
 export const riskLevelEnum = pgEnum('risk_level', ['LOW', 'MEDIUM', 'HIGH'])
 export const incidentStatusEnum = pgEnum('incident_status', ['OPEN', 'UNDER_REVIEW', 'RESOLVED', 'DISMISSED'])
@@ -22,10 +23,12 @@ export const organizations = pgTable('organizations', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   slug: varchar('slug', { length: 100 }).notNull().unique(),
-  timezone: varchar('timezone', { length: 50 }).notNull().default('Asia/Karachi'),
-  currency: varchar('currency', { length: 10 }).notNull().default('PKR'),
-  locale: varchar('locale', { length: 10 }).notNull().default('en'),
+  timezone: varchar('timezone', { length: 50 }).notNull().default('UTC'),
+  currency: varchar('currency', { length: 10 }).notNull().default('USD'),
+  locale: varchar('locale', { length: 20 }).notNull().default('en-US'),
   businessType: text('business_type'),
+  country: varchar('country', { length: 2 }),        // ISO 3166-1 alpha-2 e.g. US, GB, PK, AE
+  countryCode: varchar('country_code', { length: 6 }), // Dialing code e.g. +1, +44, +92
   isDemo: boolean('is_demo').notNull().default(false),
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -149,12 +152,17 @@ export const transactions = pgTable('transactions', {
   employeeId: text('employee_id').references(() => employees.id),
   externalTransactionId: text('external_transaction_id'),
   timestamp: timestamp('timestamp').notNull(),
-  currency: varchar('currency', { length: 10 }).notNull().default('PKR'),
+  currency: varchar('currency', { length: 10 }).notNull().default('USD'),
   grossAmount: numeric('gross_amount', { precision: 18, scale: 2 }).notNull(),
   discountAmount: numeric('discount_amount', { precision: 18, scale: 2 }).notNull().default('0'),
   refundAmount: numeric('refund_amount', { precision: 18, scale: 2 }).notNull().default('0'),
   netAmount: numeric('net_amount', { precision: 18, scale: 2 }).notNull(),
   paymentMethod: text('payment_method'),
+  paymentChannel: text('payment_channel'),       // IN_STORE, ONLINE, MOBILE_APP, etc.
+  paymentProvider: text('payment_provider'),      // stripe, square, payfast, etc. (provider name only)
+  paymentReference: text('payment_reference'),    // Provider payment/intent ID (safe reference, never PAN)
+  paymentLast4: varchar('payment_last4', { length: 4 }),  // Last 4 digits if supplied by provider
+  paymentBrand: varchar('payment_brand', { length: 50 }), // visa, mastercard, amex, etc.
   transactionStatus: txStatusEnum('transaction_status').notNull().default('COMPLETED'),
   itemCount: integer('item_count'),
   durationSeconds: integer('duration_seconds'),
@@ -165,7 +173,8 @@ export const transactions = pgTable('transactions', {
   discountPercent: numeric('discount_percent', { precision: 5, scale: 2 }),
   notes: text('notes'),
   metadata: json('metadata'),
-  source: text('source').notNull().default('csv'),
+  source: text('source').notNull().default('csv'),   // csv | webhook_square | api | etc.
+  dataSource: dataSourceEnum('data_source').notNull().default('CSV'), // DEMO|CSV|API|WEBHOOK|TEST
   sourceRecordId: text('source_record_id'),
   importJobId: text('import_job_id'),
   isDemo: boolean('is_demo').notNull().default(false),
@@ -422,6 +431,11 @@ export const subscriptions = pgTable('subscriptions', {
   currentPeriodStart: timestamp('current_period_start'),
   currentPeriodEnd: timestamp('current_period_end'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+  providerCustomerId: text('provider_customer_id'),
+  providerSubscriptionId: text('provider_subscription_id'),
+  currency: varchar('currency', { length: 10 }).default('USD'),
+  billingCycle: text('billing_cycle').default('monthly'),
+  provider: text('provider').default('stripe'),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
 
@@ -573,3 +587,86 @@ export const analysisJobs = pgTable('analysis_jobs', {
   completedAt: timestamp('completed_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
+
+// ==================== SHOPIFY INTEGRATIONS ====================
+// Per-org Shopify store connection. One org can have one Shopify store.
+// Access tokens are stored AES-256-GCM encrypted at rest — never plaintext.
+
+export const shopifyIntegrations = pgTable('shopify_integrations', {
+  id: text('id').primaryKey(),
+  organizationId: text('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  storeId: text('store_id').references(() => stores.id, { onDelete: 'set null' }),
+  shopDomain: varchar('shop_domain', { length: 255 }).notNull(),   // e.g. mystore.myshopify.com
+  shopifyShopId: text('shopify_shop_id'),                           // GID: gid://shopify/Shop/xxx
+  accessTokenEncrypted: text('access_token_encrypted').notNull(),   // AES-256-GCM, never plaintext
+  scopes: text('scopes').notNull(),                                 // Comma-separated scopes granted
+  status: text('status').notNull().default('ACTIVE'),               // ACTIVE | DISCONNECTED | ERROR
+  installedAt: timestamp('installed_at').notNull().defaultNow(),
+  uninstalledAt: timestamp('uninstalled_at'),
+  lastWebhookAt: timestamp('last_webhook_at'),
+  lastSyncAt: timestamp('last_sync_at'),
+  syncStatus: text('sync_status').default('IDLE'),                  // IDLE | RUNNING | COMPLETED | FAILED
+  syncStartedAt: timestamp('sync_started_at'),
+  syncCompletedAt: timestamp('sync_completed_at'),
+  syncCursor: text('sync_cursor'),                                  // Shopify cursor for resumable pagination
+  syncError: text('sync_error'),                                    // Last sync error (truncated, no tokens)
+  syncRecordsDiscovered: integer('sync_records_discovered').default(0),
+  syncRecordsAccepted: integer('sync_records_accepted').default(0),
+  syncRecordsDuplicates: integer('sync_records_duplicates').default(0),
+  syncRecordsRejected: integer('sync_records_rejected').default(0),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (t) => ({
+  orgUnique: uniqueIndex('shopify_integrations_org_domain_unique').on(t.organizationId, t.shopDomain),
+  shopIdIdx: index('shopify_integrations_shop_id_idx').on(t.shopifyShopId),
+  orgIdx: index('shopify_integrations_org_idx').on(t.organizationId),
+}))
+
+// Shopify webhook idempotency — prevents duplicate processing on retry
+export const shopifyWebhookEvents = pgTable('shopify_webhook_events', {
+  id: text('id').primaryKey(),
+  integrationId: text('integration_id').notNull().references(() => shopifyIntegrations.id, { onDelete: 'cascade' }),
+  shopDomain: varchar('shop_domain', { length: 255 }).notNull(),
+  shopifyWebhookId: text('shopify_webhook_id').notNull(),           // X-Shopify-Webhook-Id header
+  topic: text('topic').notNull(),                                   // orders/create, refunds/create, etc.
+  processedAt: timestamp('processed_at').notNull().defaultNow(),
+}, (t) => ({
+  uniqueWebhook: uniqueIndex('shopify_webhook_events_unique').on(t.shopDomain, t.shopifyWebhookId),
+}))
+
+// ==================== API KEYS ====================
+// Organization-scoped API credentials for machine-to-machine ingestion.
+// Secret is shown only once at creation; only the hash is stored.
+
+export const apiKeys = pgTable('api_keys', {
+  id: text('id').primaryKey(),
+  organizationId: text('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),                      // Human-readable label e.g. "Square POS Main"
+  keyHash: text('key_hash').notNull(),               // bcrypt/sha256 hash — never store plaintext
+  keyPrefix: varchar('key_prefix', { length: 8 }).notNull(), // First 8 chars for display: sg_live_ab12...
+  storeId: text('store_id').references(() => stores.id), // Optional: scope to one store
+  isActive: boolean('is_active').notNull().default(true),
+  lastUsedAt: timestamp('last_used_at'),
+  revokedAt: timestamp('revoked_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (t) => ({
+  orgIdx: index('api_keys_org_idx').on(t.organizationId),
+  activeIdx: index('api_keys_active_idx').on(t.organizationId, t.isActive),
+}))
+
+// ==================== BILLING EVENTS (webhook idempotency) ====================
+export const billingEvents = pgTable('billing_events', {
+  id: text('id').primaryKey(),
+  organizationId: text('organization_id').references(() => organizations.id, { onDelete: 'cascade' }),
+  provider: text('provider').notNull().default('stripe'),
+  providerEventId: text('provider_event_id').notNull(),
+  eventType: text('event_type').notNull(),
+  processedAt: timestamp('processed_at').notNull().defaultNow(),
+  rawPayload: json('raw_payload'),
+}, (table) => ({
+  // CRITICAL: prevents duplicate webhook processing
+  uniqueProviderEvent: uniqueIndex('billing_events_provider_event_unique')
+    .on(table.provider, table.providerEventId),
+}))
+

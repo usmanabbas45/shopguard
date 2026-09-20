@@ -40,7 +40,7 @@ export default function ReportsPage() {
   }
 
   const s = latestReport?.summary
-  const currency = s?.currency ?? 'PKR'
+  const currency = s?.currency ?? 'USD'
 
   return (
     <div className="max-w-4xl space-y-5">

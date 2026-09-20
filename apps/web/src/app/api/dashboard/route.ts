@@ -57,7 +57,7 @@ export async function GET() {
         transactionCount: Number(txStats?.txCount ?? 0),
         voidCount: Number(txStats?.voidCount ?? 0),
         refundCount: Number(txStats?.refundCount ?? 0),
-        currency: 'PKR',
+        currency: 'USD', // TODO: read from org settings once query is added
       },
       recentIncidents,
       isDemo: false,

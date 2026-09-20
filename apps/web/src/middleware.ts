@@ -37,13 +37,19 @@ const PROTECTED_API_PREFIXES = [
   '/api/cash',
   '/api/imports',
   '/api/admin',
-  // NOTE: /api/analysis is intentionally NOT here — it handles its own auth
-  //       (user session OR worker key header), so middleware must not block it.
   '/api/reports',
+  '/api/settings',    // Organization settings, API key management
+  '/api/billing',     // Billing checkout — requires owner session
+  '/api/integrations/shopify/install',  // Shopify OAuth start — requires session
+  '/api/integrations/shopify',          // Integration status/disconnect — requires session
+  '/api/integrations/shopify/sync',     // Sync trigger — requires session
+  // NOTE: /api/analysis uses its own auth (user session OR worker key)
+  // NOTE: /api/ingest uses API key auth (M2M) — NOT session-based
+  // NOTE: /api/webhooks use their own signature/API-key auth
 ]
 
 // Public routes
-const PUBLIC_ROUTES = ['/', '/login', '/signup', '/api/auth/login', '/api/auth/signup', '/api/health', '/api/webhooks']
+const PUBLIC_ROUTES = ['/', '/login', '/signup', '/api/auth/login', '/api/auth/signup', '/api/health', '/api/webhooks', '/api/ingest', '/api/integrations/shopify/webhook', '/api/integrations/shopify/callback']
 
 function isProtected(pathname: string): boolean {
   if (PUBLIC_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) return false

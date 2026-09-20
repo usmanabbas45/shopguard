@@ -1,3 +1,4 @@
+import { isCashPayment } from './payment-methods'
 // ShopGuard Risk Engine - Modular, Testable Rules
 
 import type { Transaction, RuleResult, RiskScore, RiskLevel, EmployeeBaseline, StoreBaseline } from '@shopguard/types'

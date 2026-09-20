@@ -77,6 +77,7 @@ async function createRealEmailProvider(): Promise<NotificationProvider | null> {
   if (!process.env.SMTP_HOST) return null
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // @ts-expect-error nodemailer is optional runtime dependency
     const nodemailer = await import('nodemailer')
     const transporter = nodemailer.default.createTransport({
       host: process.env.SMTP_HOST,
@@ -132,7 +133,7 @@ function buildIncidentAlertBody(incident: {
 ${incident.riskLevel} PRIORITY — ${incident.title}
 
 Store: ${incident.storeName ?? 'Unknown'}${incident.employeeName ? `\nEmployee: ${incident.employeeName}` : ''}
-Time: ${new Date(incident.createdAt).toLocaleString('en-PK')}
+Time: ${new Date(incident.createdAt).toLocaleString(undefined, { timeZone: 'UTC' })}
 
 Why this was flagged:
 ${reasons}

@@ -52,8 +52,8 @@ export async function POST(req: NextRequest) {
       id: orgId,
       name: orgName,
       slug,
-      timezone: 'Asia/Karachi',
-      currency: 'PKR',
+      timezone: 'UTC',   // Organizations set their own timezone in Settings
+      currency: 'USD',   // Organizations set their own currency in Settings
       locale: 'en',
       businessType: businessType || null,
       isDemo: false,

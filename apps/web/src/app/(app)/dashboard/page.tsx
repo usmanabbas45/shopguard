@@ -16,7 +16,7 @@ export default async function DashboardPage() {
     recentIncidents = generateDemoIncidents()
   } else if (session) {
     // Will be fetched client-side for real orgs (avoid SSR DB issues in this deploy)
-    stats = { todaySales: 0, highPriorityCount: 0, mediumPriorityCount: 0, unreviewedCount: 0, transactionCount: 0, currency: 'PKR' }
+    stats = { todaySales: 0, highPriorityCount: 0, mediumPriorityCount: 0, unreviewedCount: 0, transactionCount: 0, currency: 'USD' }
   }
 
   return <DashboardClient initialStats={stats} initialIncidents={recentIncidents} isDemo={session?.isDemo ?? false} />

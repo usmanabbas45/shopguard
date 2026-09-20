@@ -11,7 +11,8 @@ interface StoreData {
   riskLevel: string
 }
 
-const CURRENCY = 'PKR'
+// Currency comes from org settings via API — do not hardcode
+const CURRENCY = 'USD' // fallback only
 
 function RiskBadge({ level }: { level: string }) {
   return (
