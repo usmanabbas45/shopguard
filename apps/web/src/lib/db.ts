@@ -13,10 +13,11 @@ export function getDb() {
 
     const client = postgres(url, {
       max: maxConnections,
-      // Fail fast if Neon is suspended — don't hang for 300s
       connect_timeout: 10,
       idle_timeout: 10,
-      ssl: { rejectUnauthorized: false },
+      max_lifetime: 60 * 10,
+      ssl: 'require',
+      prepare: false,
     })
     _db = drizzle(client, { schema })
   }
