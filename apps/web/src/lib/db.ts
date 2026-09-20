@@ -13,11 +13,13 @@ export function getDb() {
 
     const client = postgres(url, {
       max: maxConnections,
-      connect_timeout: 10,
-      idle_timeout: 10,
-      max_lifetime: 60 * 10,
+      connect_timeout: 15,
+      idle_timeout: 20,
       ssl: 'require',
       prepare: false,
+      connection: {
+        application_name: 'shopguard-web',
+      },
     })
     _db = drizzle(client, { schema })
   }
