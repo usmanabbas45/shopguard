@@ -9,16 +9,14 @@ export function getDb() {
     const url = process.env.DATABASE_URL
     if (!url) throw new Error('DATABASE_URL not configured')
 
-    // Serverless environments (Vercel) create many concurrent instances.
-    // Use max:1 to avoid exhausting Neon's free-tier connection limit.
-    // For Docker/self-hosted, DATABASE_MAX_CONNECTIONS can be set higher.
     const maxConnections = parseInt(process.env.DATABASE_MAX_CONNECTIONS ?? '1', 10)
 
     const client = postgres(url, {
       max: maxConnections,
-      // Neon free tier auto-suspends; give extra time for cold start
-      connect_timeout: 30,
-      idle_timeout: 20,
+      // Fail fast if Neon is suspended — don't hang for 300s
+      connect_timeout: 10,
+      idle_timeout: 10,
+      ssl: { rejectUnauthorized: false },
     })
     _db = drizzle(client, { schema })
   }
