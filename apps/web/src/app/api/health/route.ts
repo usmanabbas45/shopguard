@@ -4,13 +4,13 @@ export async function GET() {
   const checks: Record<string, { status: string; latencyMs?: number; detail?: string }> = {}
   const start = Date.now()
 
-  // Database check
+  // Database check — also wakes Neon if suspended
   try {
     const db = (await import('@/lib/db')).getDb()
     const { sql } = await import('drizzle-orm')
     await db.execute(sql`SELECT 1`)
     checks.database = { status: 'healthy', latencyMs: Date.now() - start }
-  } catch (err) {
+  } catch {
     checks.database = { status: 'critical', detail: 'Connection failed' }
   }
 
