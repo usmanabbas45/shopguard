@@ -56,3 +56,4 @@ export function validateEncryptionKey(): void {
   if (hex.length !== 64) throw new Error('SHOPIFY_TOKEN_ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes / 256 bits)')
   if (!/^[0-9a-fA-F]+$/.test(hex)) throw new Error('SHOPIFY_TOKEN_ENCRYPTION_KEY must be hex-encoded')
 }
+

@@ -192,3 +192,4 @@ export async function normalizeWebhookEvent(
 
   return adapter.parseWebhook(event)
 }
+

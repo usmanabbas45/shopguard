@@ -151,3 +151,4 @@ async function handlePaymentFailed(db: Db, data: Record<string, unknown>): Promi
     .where(eq(subscriptions.providerSubscriptionId, subId))
   return null
 }
+

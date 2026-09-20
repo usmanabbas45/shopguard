@@ -72,3 +72,4 @@ export async function POST(_req: NextRequest) {
       : `Batch processed and next batch queued — cron will continue automatically.`,
   })
 }
+

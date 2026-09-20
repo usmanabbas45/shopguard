@@ -32,3 +32,4 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.redirect(buildAuthUrl(shop, state))
 }
+

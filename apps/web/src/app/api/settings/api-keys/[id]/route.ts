@@ -49,3 +49,4 @@ export async function POST(
     warning: 'Old key has been revoked. Save this new secret — it will not be shown again.',
   }, { status: 201 })
 }
+

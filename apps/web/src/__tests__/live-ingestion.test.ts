@@ -252,3 +252,4 @@ describe('security: no PAN/card numbers stored', () => {
     expect(LAST4.test('abc1')).toBe(false)   // non-numeric rejected
   })
 })
+

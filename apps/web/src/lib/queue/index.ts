@@ -317,3 +317,4 @@ export async function enqueueShopifySync(data: ShopifySyncJobData): Promise<stri
   // No Redis — cron will pick up via DB syncStatus='QUEUED'
   return null
 }
+

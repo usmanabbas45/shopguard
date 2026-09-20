@@ -315,3 +315,4 @@ export async function runJobInline(queueName: string, data: unknown): Promise<un
   if (!handler) throw new Error(`Unknown queue: ${queueName}`)
   return handler({ id: nanoid(), data, attemptsMade: 0, opts: { attempts: 1 } } as Job)
 }
+

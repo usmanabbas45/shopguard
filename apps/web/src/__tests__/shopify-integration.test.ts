@@ -736,3 +736,4 @@ describe('Sync data safety', () => {
     expect(isDemo).toBe(false)
   })
 })
+

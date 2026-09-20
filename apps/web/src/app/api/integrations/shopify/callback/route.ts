@@ -120,3 +120,4 @@ export async function GET(req: NextRequest) {
   const statusParam = webhookStatus === 'failed' ? 'connected_degraded' : 'connected_sync_queued'
   return NextResponse.redirect(`${appPublicUrl}/settings?shopify=${statusParam}&integrationId=${integrationId}`)
 }
+

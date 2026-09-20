@@ -21,3 +21,4 @@ export default async function DashboardPage() {
 
   return <DashboardClient initialStats={stats} initialIncidents={recentIncidents} isDemo={session?.isDemo ?? false} />
 }
+

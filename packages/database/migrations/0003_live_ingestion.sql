@@ -59,3 +59,4 @@ CREATE INDEX IF NOT EXISTS ingestion_stats_org_date_idx
   ON ingestion_stats(organization_id, date DESC);
 
 SELECT 'Migration 0003 complete' AS status;
+

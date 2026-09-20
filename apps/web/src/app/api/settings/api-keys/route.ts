@@ -48,3 +48,4 @@ export async function POST(req: NextRequest) {
     warning: 'Save this secret key now. It will not be shown again.',
   }, { status: 201 })
 }
+

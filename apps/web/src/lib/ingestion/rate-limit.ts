@@ -46,3 +46,4 @@ export async function checkRateLimit(keyId: string): Promise<RateLimitResult> {
     return { allowed: true, remaining: MAX_REQUESTS_PER_WINDOW, resetAt: Date.now() + WINDOW_SECONDS * 1000 }
   }
 }
+

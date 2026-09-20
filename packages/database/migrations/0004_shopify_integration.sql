@@ -68,3 +68,4 @@ CREATE INDEX IF NOT EXISTS shopify_webhook_events_integration_idx
 -- (The enum alter above handles this, column already exists from migration 0003)
 
 SELECT 'Migration 0004 complete' AS status;
+

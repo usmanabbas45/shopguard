@@ -670,3 +670,4 @@ export const billingEvents = pgTable('billing_events', {
     .on(table.provider, table.providerEventId),
 }))
 
+

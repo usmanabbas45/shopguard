@@ -306,3 +306,4 @@ export const SHOPGUARD_PLANS = {
     features: ['All Growth features', 'Unlimited everything', 'Custom integrations', 'SLA'],
   },
 }
+

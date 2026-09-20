@@ -65,3 +65,4 @@ ALTER TABLE organizations
 
 -- Done
 SELECT 'Migration 0002 complete' AS status;
+
