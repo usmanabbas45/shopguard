@@ -214,7 +214,7 @@ export default function SettingsPage() {
     <div className="max-w-3xl space-y-5">
       <div>
         <h1 className="text-xl font-bold text-slate-900">Settings</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Configure ShopGuard for your organization</p>
+        <p className="text-sm text-slate-500 mt-0.5">Configure ShopGuard for your organization.</p>
       </div>
 
       {/* Tabs */}
