@@ -60,16 +60,16 @@ export function isRedisAvailable(): boolean {
 // ==================== QUEUE NAMES ====================
 
 export const QUEUE_NAMES = {
-  IMPORT: 'sg:import',
-  ANALYSIS: 'sg:analysis',
-  BASELINE: 'sg:baseline',
-  NOTIFICATION: 'sg:notification',
-  FOLLOWUP: 'sg:followup',
-  REPORT: 'sg:report',
-  ML: 'sg:ml',
-  HEALTH: 'sg:health',
-  QUALITY: 'sg:quality',
-  SHOPIFY_SYNC: 'sg:shopify-sync',  // Shopify historical/incremental sync batches
+  IMPORT: 'sg-import',
+  ANALYSIS: 'sg-analysis',
+  BASELINE: 'sg-baseline',
+  NOTIFICATION: 'sg-notification',
+  FOLLOWUP: 'sg-followup',
+  REPORT: 'sg-report',
+  ML: 'sg-ml',
+  HEALTH: 'sg-health',
+  QUALITY: 'sg-quality',
+  SHOPIFY_SYNC: 'sg-shopify-sync',  // Shopify historical/incremental sync batches
 } as const
 
 // ==================== QUEUE FACTORY ====================
@@ -293,7 +293,7 @@ export interface ShopifySyncJobData {
  *   2. Manual "Sync now" also runs one batch inline immediately
  *
  * Consumer paths on standalone worker (Docker/Render):
- *   1. BullMQ Worker listening on 'sg:shopify-sync'
+ *   1. BullMQ Worker listening on 'sg-shopify-sync'
  *
  * Idempotency: jobId = idempotencyKey → BullMQ deduplicates if same key queued twice.
  * DB syncStatus='QUEUED' is the durable fallback signal (survives Redis restart).
