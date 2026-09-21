@@ -1,8 +1,6 @@
 import type { NextConfig } from 'next'
 
-// v2 - no CSP headers
-const nextConfig: NextConfig = {
-  turbopack: {},
-}
+// v3 - disable turbopack for production build compatibility
+const nextConfig: NextConfig = {}
 
 export default nextConfig
