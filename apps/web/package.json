@@ -38,7 +38,7 @@
     "csv-parse": "^5.6.0",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.38.0",
-    "ioredis": "^6.0.0",
+    "ioredis": "^5.6.0",
     "iron-session": "^8.0.3",
     "lucide-react": "^0.469.0",
     "nanoid": "^5.0.0",
