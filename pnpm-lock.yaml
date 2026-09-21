@@ -148,8 +148,8 @@ importers:
         specifier: ^3.0.2
         version: 3.0.3
       bullmq:
-        specifier: ^6.3.6
-        version: 6.3.6(ioredis@6.0.0(supports-color@7.2.0))(pg@8.23.0)
+        specifier: ^5.56.0
+        version: 5.81.5(supports-color@7.2.0)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -2617,24 +2617,6 @@ packages:
       redis:
         optional: true
 
-  bullmq@6.3.6:
-    resolution: {integrity: sha512-+T6T6jeONZ5AvCj4xDkjuqdXI+/Kezvi/PvNS2YrIiO3HZNS4MgI+397ORyfO3Mx6jP127jowte6fNOxAfUN2w==}
-    engines: {node: '>=14.17.0'}
-    peerDependencies:
-      bullmq-otel: '>=2.0.0'
-      ioredis: '>=5.0.0'
-      pg: '>=8.0.0'
-      redis: '>=5.0.0'
-    peerDependenciesMeta:
-      bullmq-otel:
-        optional: true
-      ioredis:
-        optional: true
-      pg:
-        optional: true
-      redis:
-        optional: true
-
   busboy@1.6.0:
     resolution: {integrity: sha512-8SFQbg/0hQ9xy3UNTB0YEnsNBbWfhf7RtnzpL7TkBiTBRfrQ9Fxcnz7VJsleJpyp6rVLvXiuORqjlHi5q+PYuA==}
     engines: {node: '>=10.16.0'}
@@ -2782,10 +2764,6 @@ packages:
     resolution: {integrity: sha512-p0SaNjrHOnQeR8/VnfGbmg9te2kfyYSQ7Sc/j/6DtPL3JQvKxmjO9TSjNFpujqV3vEYYBvNNvXSxzyksBWAx1Q==}
     engines: {node: '>=12.0.0'}
     deprecated: v4 is no longer maintained, upgrade to v5
-
-  cron-parser@5.10.1:
-    resolution: {integrity: sha512-pKRrRagItwk9rGIStcUyMxFX34x56zoX3KDf9HJ4ttwkXIK1qxK63EvXvEDmlxI9AdPJ+Y7TEKRftRlW5eSS7A==}
-    engines: {node: '>=18'}
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -3920,9 +3898,6 @@ packages:
 
   msgpackr@2.0.5:
     resolution: {integrity: sha512-cef05H/dSYpLpqp3sj/qyZh5vhUYCalnaLO7j1yOmpsR0y/XwLVtK7r5gn+U/F7CTEfMowcGhlUQJDLcLf7jcA==}
-
-  msgpackr@2.1.0:
-    resolution: {integrity: sha512-p/pBCVO63CsvvpkomUnNNag6+n38rULuDA6HHe70o2gtC8ODI52foF/4ko2qQcp6OiErJXTmrZeXmsGGHsIQNQ==}
 
   mz@2.7.0:
     resolution: {integrity: sha512-z81GNO7nnYMEhrGh9LeymoE4+Yr0Wn5McHIZMK5cfQCl+NDX08sCZgUc9/6MHni9IWuFLm1Z3HTCXu2z9fN62Q==}
@@ -6894,17 +6869,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  bullmq@6.3.6(ioredis@6.0.0(supports-color@7.2.0))(pg@8.23.0):
-    dependencies:
-      cron-parser: 5.10.1
-      msgpackr: 2.1.0
-      node-abort-controller: 3.1.1
-      semver: 7.8.5
-      tslib: 2.8.1
-    optionalDependencies:
-      ioredis: 6.0.0(supports-color@7.2.0)
-      pg: 8.23.0
-
   busboy@1.6.0:
     dependencies:
       streamsearch: 1.1.0
@@ -7049,10 +7013,6 @@ snapshots:
   cookie@2.0.1: {}
 
   cron-parser@4.9.0:
-    dependencies:
-      luxon: 3.7.2
-
-  cron-parser@5.10.1:
     dependencies:
       luxon: 3.7.2
 
@@ -8349,10 +8309,6 @@ snapshots:
     optional: true
 
   msgpackr@2.0.5:
-    optionalDependencies:
-      msgpackr-extract: 3.0.4
-
-  msgpackr@2.1.0:
     optionalDependencies:
       msgpackr-extract: 3.0.4
 
