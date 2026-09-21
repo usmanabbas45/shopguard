@@ -214,6 +214,9 @@ importers:
       '@types/node':
         specifier: ^22.0.0
         version: 22.20.3
+      '@types/node-cron':
+        specifier: ^3.0.11
+        version: 3.0.11
       '@types/react':
         specifier: ^19.0.0
         version: 19.3.0
